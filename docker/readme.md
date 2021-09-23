@@ -70,3 +70,29 @@ CC=x86_64-w64-mingw32-gcc-posix CXX=x86_64-w64-mingw32-g++-posix GOOS=windows GO
 ```
 
 通过复用`xgo`的`docker`环境可以实现我想要的交叉编译带上`cgo`的方法。因为目前只用到了windows和Linux这两个平台，其他平台的编译可以参考`docker/base/build.sh`脚本。
+
+编写一份自己够用的`Dockerfile`只需要编译window和Linux两个平台就行了。
+
+```dockerfile
+FROM ubuntu:20.04
+
+MAINTAINER janbar <janbar@163.com>
+
+ADD go1.17.1.linux-amd64.tar.gz /go
+ENV GOPROXY https://goproxy.cn,direct
+ENV GO111MODULE on
+ENV GOPATH /go/path
+ENV GOROOT /go/go
+ENV PATH $GOROOT/bin:$GOPATH/bin:$PATH
+ENV DEBIAN_FRONTEND=noninteractive
+WORKDIR /build
+
+RUN \
+  apt-get update && \
+  apt-get install -y automake autogen build-essential ca-certificates \
+    gcc-mingw-w64 g++-mingw-w64 \
+    libtool libxml2-dev uuid-dev libssl-dev swig pkg-config patch make wget git curl \
+    --no-install-recommends
+
+```
+
