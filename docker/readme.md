@@ -78,7 +78,6 @@ FROM ubuntu:20.04
 
 MAINTAINER janbar <janbar@163.com>
 
-ADD go1.17.1.linux-amd64.tar.gz /go
 ENV GOPROXY https://goproxy.cn,direct
 ENV GO111MODULE on
 ENV GOPATH /go/path
@@ -91,8 +90,12 @@ RUN \
   apt-get update && \
   apt-get install -y automake autogen build-essential ca-certificates \
     gcc-mingw-w64 g++-mingw-w64 \
-    libtool libxml2-dev uuid-dev libssl-dev swig pkg-config patch make wget git curl \
+    libtool libxml2-dev uuid-dev libssl-dev make wget git curl \
     --no-install-recommends
 
+ENTRYPOINT ["./build.sh"]
 ```
 
+执行`docker build -t janbar .`编译出一个镜像。
+
+然后执行`docker run --rm -v $(pwd):/build -v ${GOROOT}:/go/go janbar`，容器内部使用外部go环境，因此无需为每个版本go单独开一个docker镜像。
