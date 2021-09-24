@@ -2,7 +2,7 @@
 
 # chmod +x build.sh,为脚本加上可执行权限
 # 进入sqlite目录,执行如下docker指令
-# docker run --rm -v $(pwd):/build karalabe/xgo-1.17.1
+# docker run --rm -v $(pwd):/build -v $GOROOT:/go/go janbar
 
 go mod download
 

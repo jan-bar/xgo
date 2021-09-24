@@ -71,10 +71,10 @@ CC=x86_64-w64-mingw32-gcc-posix CXX=x86_64-w64-mingw32-g++-posix GOOS=windows GO
 
 通过复用`xgo`的`docker`环境可以实现我想要的交叉编译带上`cgo`的方法。因为目前只用到了windows和Linux这两个平台，其他平台的编译可以参考`docker/base/build.sh`脚本。
 
-编写一份自己够用的`Dockerfile`只需要编译window和Linux两个平台就行了。
+编写一份自己够用的`Dockerfile`只需要编译window和Linux两个平台就行了。基于`ubuntu16.04`是因为使用旧版`GLIBC`，如果使用`ubuntu20.04`编译出来的可执行程序在低版本Linux无法运行。
 
 ```dockerfile
-FROM ubuntu:20.04
+FROM ubuntu:16.04
 
 MAINTAINER janbar <janbar@163.com>
 
@@ -98,4 +98,4 @@ ENTRYPOINT ["./build.sh"]
 
 执行`docker build -t janbar .`编译出一个镜像。
 
-然后执行`docker run --rm -v $(pwd):/build -v ${GOROOT}:/go/go janbar`，容器内部使用外部go环境，因此无需为每个版本go单独开一个docker镜像。
+然后执行`docker run --rm -v $(pwd):/build -v $GOROOT:/go/go janbar`，容器内部使用外部go环境，因此无需为每个版本go单独开一个docker镜像。
