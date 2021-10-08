@@ -1,3 +1,11 @@
+# janbar
+可以阅读[readme.md](docker/readme.md)，查看我的详细改动。
+
+之所以要fork该项目做改动，是因为原项目只适用go旧版本，新版本适用go.mod方式管理包依赖，所以需要做一些修改。
+
+我制作的docker只是复用原作者里面的环境。
+
+
 # xgo - Go CGO cross compiler
 
 Although Go strives to be a cross platform language, cross compilation from one
