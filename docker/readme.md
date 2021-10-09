@@ -117,3 +117,6 @@ ENTRYPOINT ["./build.sh"]
 执行`docker build -t janbar .`编译出一个镜像。
 
 然后执行`docker run --rm -v $(pwd):/build -v $GOROOT:/go/go janbar`，容器内部使用外部go环境，因此无需为每个版本go单独开一个docker镜像。
+
+## 到dockerhub去操作
+地址：<https://hub.docker.com/r/janboy/cgolang>
