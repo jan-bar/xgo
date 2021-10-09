@@ -96,6 +96,24 @@ RUN \
 ENTRYPOINT ["./build.sh"]
 ```
 
+为了保险起见，还是复用大佬的base镜像，但是我只需要环境，go语言的环境则通过共享宿主机的go环境即可。
+
+```dockerfile
+FROM karalabe/xgo-base
+
+MAINTAINER janbar <janbar@163.com>
+
+ENV GOPROXY https://goproxy.cn,direct
+ENV GO111MODULE on
+ENV GOPATH /go/path
+ENV GOROOT /go/go
+ENV PATH $GOROOT/bin:$GOPATH/bin:$PATH
+
+WORKDIR /build
+
+ENTRYPOINT ["./build.sh"]
+```
+
 执行`docker build -t janbar .`编译出一个镜像。
 
 然后执行`docker run --rm -v $(pwd):/build -v $GOROOT:/go/go janbar`，容器内部使用外部go环境，因此无需为每个版本go单独开一个docker镜像。
