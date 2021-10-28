@@ -1,30 +1,31 @@
-我的`dockerfile`，主要生成带交叉编译工具链的docker镜像。
+我的`dockerfile`，主要生成带交叉编译工具链的docker镜像，通过安装`g`工具去安装最新版的go环境。
 
 ```dockerfile
 FROM karalabe/xgo-base
 
 MAINTAINER janbar <janbar@163.com>
 
-ENV GO_VERSION 11701
+ENV G_EXPERIMENTAL true
+ENV G_HOME /go
+ENV G_MIRROR https://golang.google.cn/dl/
 ENV GOPROXY https://goproxy.cn,direct
+ENV GOPATH $G_HOME/path
+ENV GOROOT $G_HOME/go
+ENV PATH $GOROOT/bin:$GOPATH/bin:$PATH
 ENV GO111MODULE on
-WORKDIR /build # 指定默认目录,用于映射编译路径
 
-# 由于后续版本不支持darwin/386,所以用sed去掉
-# 我的编译脚本不使用xgo因此无需安装xgo
-RUN \
-  export ROOT_DIST=https://studygolang.com/dl/golang/go1.17.1.linux-amd64.tar.gz        && \
-  export ROOT_DIST_SHA=dab7d9c34361dc21ec237d584590d72500652e7c909bf082758fb63064fca0ef && \
-  sed -i '60,$d' $BOOTSTRAP_PURE && \
-  $BOOTSTRAP_PURE
-# 在默认目录/build中包含build.sh脚本
+WORKDIR /build
+
+RUN wget https://github.com/voidint/g/releases/download/v1.2.1/g1.2.1.linux-amd64.tar.gz -q -O - | tar -xzC /sbin/ && \
+    g install $(g ls-remote stable | tail -n1)
+
 ENTRYPOINT ["./build.sh"]
 ```
 
 编译指定版本的docker镜像
 
 ```sh
-docker build -t karalabe/xgo-1.17.1 ./go-1.17.1
+docker build -t janboy/cgolang-g .
 ```
 
 提供两个使用`CGO`交叉编译的示例：
@@ -36,7 +37,7 @@ docker build -t karalabe/xgo-1.17.1 ./go-1.17.1
 
 # chmod +x build.sh,为脚本加上可执行权限
 # 进入sqlite目录,执行如下docker指令
-# docker run --rm -v $(pwd):/build karalabe/xgo-1.17.1
+# docker run --rm -v $(pwd):/build janboy/cgolang-g
 
 go mod download
 
@@ -52,7 +53,7 @@ CC=x86_64-w64-mingw32-gcc-posix CXX=x86_64-w64-mingw32-g++-posix GOOS=windows GO
 
 # chmod +x build.sh,为脚本加上可执行权限
 # 进入sqlite目录,执行如下docker指令
-# docker run --rm -v $(pwd):/build karalabe/xgo-1.17.1
+# docker run --rm -v $(pwd):/build janboy/cgolang-g
 
 go mod download
 
@@ -119,4 +120,5 @@ ENTRYPOINT ["./build.sh"]
 然后执行`docker run --rm -v $(pwd):/build -v $GOROOT:/go/go janbar`，容器内部使用外部go环境，因此无需为每个版本go单独开一个docker镜像。
 
 ## 到dockerhub去操作
-地址：<https://hub.docker.com/r/janboy/cgolang>
+地址：<https://hub.docker.com/r/janboy/cgolang-g>
+
