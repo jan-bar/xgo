@@ -24,8 +24,8 @@ RUN wget https://github.com/voidint/g/releases/download/v1.2.1/g1.2.1.linux-amd6
     GOOS=linux GOARCH=mips64le CGO_ENABLED=1 CC=mips64el-linux-gnuabi64-gcc-5 go install std && \
     GOOS=linux GOARCH=mips CGO_ENABLED=1 CC=mips-linux-gnu-gcc-5 go install std && \
     GOOS=linux GOARCH=mipsle CGO_ENABLED=1 CC=mipsel-linux-gnu-gcc-5 go install std && \
-    GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc go install std && \
-    GOOS=windows GOARCH=386 CGO_ENABLED=1 CC=i686-w64-mingw32-gcc go install std && \
+    GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc-posix go install std && \
+    GOOS=windows GOARCH=386 CGO_ENABLED=1 CC=i686-w64-mingw32-gcc-posix go install std && \
     GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 CC=o64-clang go install std
 
 ENTRYPOINT ["./build.sh"]
