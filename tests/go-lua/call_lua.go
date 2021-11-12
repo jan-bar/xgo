@@ -9,9 +9,9 @@ package main
 ****************************************************/
 
 /*
-#cgo CFLAGS: -I ${SRCDIR}/lua-5.4.3/src
-#cgo linux LDFLAGS: -L ${SRCDIR}/lua-5.4.3/src -llua -lm -ldl
-#cgo windows LDFLAGS: -L ${SRCDIR}/lua-5.4.3/src -llua -lm
+#cgo CFLAGS: -I${SRCDIR}/lua-5.4.3/src
+#cgo linux LDFLAGS: -L${SRCDIR}/lua-5.4.3/src -lluaLinux -lm -ldl
+#cgo windows LDFLAGS: -L${SRCDIR}/lua-5.4.3/src -lluaWin -lm
 #include <stdlib.h>
 #include <string.h>
 #include "lua.h"
@@ -137,7 +137,7 @@ func DumpLuaCode(strip bool, script ...string) ([]byte, error) {
 	res := C.dump_lua_code(C.int(argc), &cStr[0], stripInt, &size)
 
 	data := C.GoBytes(unsafe.Pointer(res), C.int(size))
-	if data[0] != 0x1b || data[1] != 'L' || data[2] != 'u' || data[3] != 'a' {
+	if string(data[:4]) != "\x1bLua" {
 		return nil, errors.New(string(data)) // 不是头部,则返回错误字符串
 	}
 	return data, nil
