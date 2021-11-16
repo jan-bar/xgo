@@ -16,6 +16,7 @@ ENV GO111MODULE on
 
 WORKDIR /build
 
+# RUN curl -sL https://github.com/voidint/g/releases/download/v1.2.1/g1.2.1.linux-amd64.tar.gz | tar -xzC /sbin/ && \
 RUN wget https://github.com/voidint/g/releases/download/v1.2.1/g1.2.1.linux-amd64.tar.gz -q -O - | tar -xzC /sbin/ && \
     g install $(g ls-remote stable | tail -n1) && \
     GOOS=linux GOARCH=386 CGO_ENABLED=1 go install std && \
