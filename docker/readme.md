@@ -20,6 +20,7 @@ WORKDIR /build
 RUN wget https://github.com/voidint/g/releases/download/v1.2.1/g1.2.1.linux-amd64.tar.gz -q -O - | tar -xzC /sbin/ && \
     g install $(g ls-remote stable | tail -n1) && \
     GOOS=linux GOARCH=386 CGO_ENABLED=1 go install std && \
+    GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go install std && \
     GOOS=linux GOARCH=arm64 CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc-5 go install std && \
     GOOS=linux GOARCH=mips64 CGO_ENABLED=1 CC=mips64-linux-gnuabi64-gcc-5 go install std && \
     GOOS=linux GOARCH=mips64le CGO_ENABLED=1 CC=mips64el-linux-gnuabi64-gcc-5 go install std && \
@@ -97,13 +98,17 @@ ENV PATH $GOROOT/bin:$GOPATH/bin:$PATH
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /build
 
-RUN \
-  apt-get update && \
-  apt-get install -y automake autogen build-essential ca-certificates \
-    gcc-mingw-w64 g++-mingw-w64 \
-    libtool libxml2-dev uuid-dev libssl-dev make wget git curl \
-    --no-install-recommends
+#RUN \
+#  apt-get update && \
+#  apt-get install -y automake autogen build-essential ca-certificates \
+#    gcc-mingw-w64 g++-mingw-w64 \
+#    libtool libxml2-dev uuid-dev libssl-dev make wget git curl \
+#    --no-install-recommends
 
+RUN apt-get update && \
+    apt-get install -y jq git curl make ca-certificates openssh-client \
+    build-essential gcc-mingw-w64 g++-mingw-w64 --no-install-recommends
+ 
 ENTRYPOINT ["./build.sh"]
 ```
 
