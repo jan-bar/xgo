@@ -14,19 +14,12 @@ package main
 #cgo windows LDFLAGS: -L${SRCDIR}/lua-5.4.3/src -lluaWin -lm
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include "lua.h"
 #include "lauxlib.h"
 #include "lstate.h"
 #include "lualib.h"
 #include "lundump.h"
-
-static const char *fatal(const char *msg, lua_State *L, size_t *outlen) {
-    luaL_Buffer buf;
-    luaL_buffinit(L, &buf);
-    luaL_addstring(&buf, msg);
-    luaL_pushresult(&buf);
-    return lua_tolstring(L, -1, outlen);
-}
 
 static int luac_writer(lua_State *L, const void *b, size_t size, void *ud) {
     UNUSED(L);
@@ -67,29 +60,36 @@ static const Proto *combine(lua_State *L, int n) {
 static const char *dump_lua_code(int argc, char *argv[], int strip, size_t *outlen) {
     lua_State * L = luaL_newstate();
     if (NULL == L) {
-        const char *s = "cannot create state: not enough memory";
-        *outlen = strlen(s);
-        return s;
+        errno = 1;
+        return NULL;
     }
-    if (!lua_checkstack(L, argc))
-        return fatal("too many input files", L, outlen);
+    if (!lua_checkstack(L, argc)) {
+        errno = 2;
+        return NULL;
+    }
 
     int i;
     for (i = 0; i < argc; i++) {
-        if (luaL_loadstring(L, argv[i]) != LUA_OK)
-            return fatal(lua_tostring(L, -1), L, outlen);
+        if (luaL_loadstring(L, argv[i]) != LUA_OK) {
+            errno = 3;
+            return NULL;
+        }
     }
 
     const Proto *f = combine(L, argc);
-    if (f == NULL)
-        return fatal(lua_tostring(L, -1), L, outlen);
+    if (f == NULL) {
+        errno = 4;
+        return NULL;
+	}
 
     luaL_Buffer buf;
     luaL_buffinit(L, &buf);
 
     lua_lock(L);
-    if (luaU_dump(L, f, luac_writer, &buf, strip) != LUA_OK)
-        return fatal("unable to dump lua code", L, outlen);
+    if (luaU_dump(L, f, luac_writer, &buf, strip) != LUA_OK) {
+        errno = 5;
+        return NULL;
+    }
     lua_unlock(L);
 
     luaL_pushresult(&buf);
@@ -134,7 +134,10 @@ func DumpLuaCode(strip bool, script ...string) ([]byte, error) {
 	if strip {
 		stripInt = C.int(1)
 	}
-	res := C.dump_lua_code(C.int(argc), &cStr[0], stripInt, &size)
+	res, err := C.dump_lua_code(C.int(argc), &cStr[0], stripInt, &size)
+	if err != nil {
+		return nil, err
+	}
 
 	data := C.GoBytes(unsafe.Pointer(res), C.int(size))
 	if string(data[:4]) != "\x1bLua" {

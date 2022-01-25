@@ -1,6 +1,9 @@
 package main
 
-import "os"
+import (
+	"os"
+	"syscall"
+)
 
 func main() {
 	L, err := NewLuaState()
@@ -24,8 +27,12 @@ test(123,'456',true,666,777)
 
 	code, err := DumpLuaCode(true, script, "a b c")
 	if err != nil {
-		// 编码lua代码报错
-		println(err.Error())
+		if errno, ok := err.(syscall.Errno); ok {
+			// 编码lua代码报错, 用返回值捕获C里面的错误
+			println("DumpLuaCode errno",int(errno))
+		} else {
+			println("DumpLuaCode", err.Error())
+		}
 	}
 
 	code, err = DumpLuaCode(true, "a=math.pow(2,10)",
