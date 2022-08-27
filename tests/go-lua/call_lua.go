@@ -6,6 +6,8 @@ package main
 3.在Linux下编译：make linux test
 4.在Windows下编译：make mingw test
 5.按照下面的cgo使用方法通过go调用lua
+6.注意编译好的[libluaLinux.a,libluaWin.a]已经随项目提交,并且在LDFLAGS中配置好
+    后续编译可直接用.a文件,无需重复编译lua源码
 ****************************************************/
 
 /*
