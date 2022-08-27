@@ -20,11 +20,19 @@ import (
 )
 
 func main() {
-	a, err := C.sayHi(C.int(1))
+	a, err := C.sayHi(C.int(0)) // errno=0时err=nil
+	fmt.Printf("%d,%T,%v\n", int(a), a, err)
 	if err != nil {
 		if errno, ok := err.(syscall.Errno); ok {
 			fmt.Printf("%v,%d\n", err, int(errno))
 		}
 	}
-	fmt.Printf("%d,%T\n", int(a), a)
+
+	a, err = C.sayHi(C.int(5))
+	fmt.Printf("%d,%T,%v\n", int(a), a, err)
+	if err != nil {
+		if errno, ok := err.(syscall.Errno); ok {
+			fmt.Printf("%v,%d\n", err, int(errno))
+		}
+	}
 }

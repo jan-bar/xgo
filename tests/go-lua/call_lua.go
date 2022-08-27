@@ -58,8 +58,11 @@ static const Proto *combine(lua_State *L, int n) {
     f->sizelineinfo = 0;
     return f;
 }
-
+// 上面几个方法都是抄luac.c源码,只是将其中写入文件操作改为写入lua字符串对象
+// 最终生成字节码文件数据,返回到Go中使用
 static const char *dump_lua_code(int argc, char *argv[], int strip, size_t *outlen) {
+    errno = 0; // 默认错误码为0
+
     lua_State * L = luaL_newstate();
     if (NULL == L) {
         errno = 1;
@@ -84,7 +87,7 @@ static const char *dump_lua_code(int argc, char *argv[], int strip, size_t *outl
         return NULL;
 	}
 
-    luaL_Buffer buf;
+    luaL_Buffer buf; // 利用lua源码的字符串实现来保存字节码
     luaL_buffinit(L, &buf);
 
     lua_lock(L);
@@ -105,6 +108,18 @@ import (
 	"errors"
 	"unsafe"
 )
+
+/*
+func C.CString(string) *C.char
+func C.CBytes([]byte) unsafe.Pointer
+defer C.free(unsafe.Pointer(cStr))
+上面两个将go对象转换为C内存数据,需要显示free
+
+下面是将C数据转换为Go对象
+func C.GoString(*C.char) string
+func C.GoStringN(*C.char, C.int) string
+func C.GoBytes(unsafe.Pointer, C.int) []byte
+*/
 
 const (
 	LuaTTable    = C.LUA_TTABLE
@@ -138,12 +153,16 @@ func DumpLuaCode(strip bool, script ...string) ([]byte, error) {
 	}
 	res, err := C.dump_lua_code(C.int(argc), &cStr[0], stripInt, &size)
 	if err != nil {
+		// errno, ok := err.(syscall.Errno); ok // 第二个返回值来源errno
 		return nil, err
 	}
 
+	// C中的[const char *]数据用如下方式转换到Go中,经过查看多方代码,发现都没有手动free内存
+	// 而且一旦执行[defer C.free(unsafe.Pointer(res))]释放内存会导致程序异常退出
+	// 所以该问题需要长时间运行观察观察,目前先按这种方式不手动释放内存使用
 	data := C.GoBytes(unsafe.Pointer(res), C.int(size))
 	if string(data[:4]) != "\x1bLua" {
-		return nil, errors.New(string(data)) // 不是头部,则返回错误字符串
+		return nil, errors.New("not luac file")
 	}
 	return data, nil
 }
@@ -221,12 +240,14 @@ func (L *LuaState) Pop(n int) {
 }
 
 func (L *LuaState) ToString(index int) string {
+	// https://github.com/aarzilli/golua/blob/11106aa577653365582edb61e6cb9f7edeb81eed/lua/lua.go#L503
 	var size C.size_t
 	r := C.lua_tolstring(L.s, C.int(index), &size)
 	return C.GoStringN(r, C.int(size))
 }
 
 func (L *LuaState) ToBytes(index int) []byte {
+	// https://github.com/aarzilli/golua/blob/11106aa577653365582edb61e6cb9f7edeb81eed/lua/lua.go#L509
 	var size C.size_t
 	b := C.lua_tolstring(L.s, C.int(index), &size)
 	return C.GoBytes(unsafe.Pointer(b), C.int(size))

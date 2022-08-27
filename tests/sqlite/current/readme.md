@@ -15,4 +15,8 @@ gcc -c sqlite3.c -lpthread -ldl -o sqlite3.o && ar -cr libsqlite3.a sqlite3.o
 # 通过修改sqlite3.c文件的下面两个宏定义,然后执行时查询值,以此确定使用我指定的库编译
 select SQLITE_VERSION()
 select SQLITE_SOURCE_ID()
+
+# 如果编译C代码
+gcc -o test main.c libsqlite3.a -lm -ldl -lpthread -static
+
 ```
